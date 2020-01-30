@@ -25,6 +25,10 @@ def createRot (RPY, degrees=False):
     R_roll = np.array([[m.cos(i_roll), m.sin(i_roll), 0.],[-m.sin(i_roll), m.cos(i_roll), 0.],[0., 0., 1.]])
     return np.dot(R_roll, np.dot(R_pitch, R_yaw))
 
+def createSkewSymmMat (angles):
+    return np.array([[0., angles[2], -angles[1]],[-angles[2], 0., angles[0]], [angles[1], -angles[0], 0.]])
+
+
 def lineNormalToPoints(n, im_size):
     '''This returns either a tuple or list with two points inside of it.  These
     points should be on the edge of the image and correspond with the normal (n)
