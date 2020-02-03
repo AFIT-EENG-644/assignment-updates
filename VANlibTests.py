@@ -184,15 +184,72 @@ class TestVANlib(unittest.TestCase):
             self.assertTrue( np.allclose( tst, self.K[:2,2] ) )
         
     
-    ###### Coming soon (Friday or Monday!)
-    #def test_imPointDerivX(self):
+   def test_imPointDerivX(self):
         #This will be numerical test
         #Create a random world location and some random points in space
         #Move the points by a small amount (numerical derivative)
         #Compare with computed derivative
-    
-    #def test_refineTriangulate(self):
-        
+        N_tests = 20
+        ss = .01 # step size
+        for i in range(N_tests):
+            #create random im_size
+            im_size = np.random.rand(2) * 2000. +400. #between 400 and 2400
+            focal_length = np.random.rand(1).item() * 2000. + 500.
+            K = np.array([[focal_length, 0., im_size[0]/2.0],
+                          [0., focal_length, im_size[1]/2.0],
+                          [0., 0., 1.]])
+            rot = np.random.rand(3)*2*m.pi
+            R = van.createRot(rot)
+            w_cam = np.random.rand(3) * 400. - 200.
+            P = van.createP(K, R, w_cam)
+            true_x_loc = np.random.rand(2) * im_size
+            X = van.backprojectPoints( K, R, w_cam, [( true_x_loc, ( np.random.rand(1)*500+50).item() )] ).reshape((3,))
+            X += np.random.rand(3)*2 -1
+            im_x = van.projectPoints(P, X).reshape((2,))
+            #This function should do a "closed form" derivative
+            comput_deriv = van.imPointDerivX(P, X)
+            #Compute a numerical derivative
+            numer_deriv = np.zeros((2,3))
+            for j in range(3):
+                curr_X = X.copy()
+                curr_X[j] += ss
+                curr_im_pt= van.projectPoints(P, curr_X).reshape((2,))
+                numer_deriv[:,j] = (curr_im_pt - im_x)/ss
+            #Compare the numerical and closed form derivative
+            self.assertTrue(np.allclose(comput_deriv, numer_deriv, rtol=ss*.1))
+        #I should really do a test to make sure that if row == 0 or row==1 it doesn't croak
+        comput_deriv = van.imPointDerivX(P,X)
+        comput_deriv0 = van.imPointDerivX(P,X,0).reshape((1,3))
+        comput_deriv1 = van.imPointDerivX(P,X,1).reshape((1,3))
+        test_deriv = np.concatenate((comput_deriv0, comput_deriv1),axis=0)
+        self.assertTrue( np.allclose( comput_deriv, test_deriv ) )
+
+    def test_refineTriangulate(self):
+        #First, create the true point
+        X_true = np.random.rand(3)*400-200.
+        #Find the location of the object in 4 cameras
+        N_cams = 4
+        w_cams = np.zeros((N_cams,3))
+        Rs = []
+        Ks = []
+        Ps = []
+        x_true=[]
+        for i in range(N_cams):
+            w_cams[i] = np.random.rand(3)*400-200
+            Rs.append(van.rotateCameraAtPoint(X_true, w_cams[i], True))
+            im_size = np.random.rand(2) * 2000. +400. #between 400 and 2400
+            focal_length = np.random.rand(1).item() * 2000. + 500.
+            Ks.append(self.K)
+            '''np.array([[focal_length, 0., im_size[0]/2.0],
+                          [0., focal_length, im_size[1]/2.0],
+                          [0., 0., 1.]]))'''
+            Ps.append(van.createP(Ks[i], Rs[i], w_cams[i]))
+            x_true.append(van.projectPoints(Ps[i], X_true))
+        PX_list = list(zip(Ps,x_true))
+        X_ret = van.refineTriangulate(PX_list)
+        #I choose the atol to correspond with the convergence criteria 
+        # in refineTriangulate
+        self.assertTrue(np.allclose( X_ret, X_true) )
 
 unittest.main()
 

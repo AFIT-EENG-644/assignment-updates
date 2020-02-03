@@ -3,13 +3,72 @@ import scipy.linalg as la
 import math as m
 import cv2
 
+def assert_np_matrix(m, shape):
+    '''Verify that the variable is an np.ndarray, has the correct dimensionality, 
+    and is of the correct shape. Raise an exception if it fails any test.
+
+    Args:
+        m: Matrix to test
+        shape (tuple(int,int)) or (tuple(int,)): Required shape (rows, cols). 
+            If one element is 0, ignores that dimension (allows for a 3XN array, where
+            you don't know what N is at compile-time)
+
+    Raises:
+        ValueError: Wrong type, dimensionality or size
+    '''
+
+    if not type(m) is np.ndarray:
+        raise ValueError('Wrong type', 'matrix must be np.ndarray')
+
+    if not len(shape) == len(m.shape):
+        raise ValueError('Wrong dimensions', 
+                         f'array must be {len(shape)}-dimensional, got {len(m.shape)}-d array')
+
+    if len(shape)==1:
+        if shape[0]!=0 and m.shape[0] != shape[0]:
+            raise ValueError('Wrong shape', f'matrix must be a {shape} but is {m.shape}')
+    else:
+        if not shape[0] and not m.shape[1] == shape[1]:
+            raise ValueError('Wrong shape', f'matrix must be a {shape} but is {m.shape}')
+        
+        if not shape[1] and not m.shape[0] == shape[0]:
+            raise ValueError('Wrong shape', f'matrix must be a {shape} but is {m.shape}')
+        
+        if shape[0] and shape[1] and not m.shape == shape:
+            #print('ERROR: set_translation(): w_T_c must be a 1x3 matrix')
+            raise ValueError('Wrong shape', f'matrix must be a {shape} but is {m.shape}')
+
+def assert_np_matrix_choice(m, shapes):
+    '''
+    Take in m and see if it is one of a list of shapes
+
+    Args:  shapes is a list of tuples describing shapes.  Each
+    must be either 1-D or 2-D (rows, cols)
+    '''
+    if not type(m) is np.ndarray:
+        raise ValueError('Wrong type', 'matrix must be np.ndarray')
+
+    passed = False
+    for shape in shapes:
+        try:
+            assert_np_matrix(m, shape)
+        except ValueError:
+            pass
+        else:
+            passed = True
+    if not passed:
+        raise ValueError('Wrong shape', f'matrix is {m.shape}, but needs to be one of {shapes}')
+
 def createRot (RPY, degrees=False):
     '''
     Creates a rotation matrix from roll, pitch, and yaw (passed in as a 3-element 
     thing).  Assumes radians unless degrees=True.  The axes are assumed to be
     as in a camera (east-down-north in the real-world)
+
+    RPY can be a list, tuple, or ndarray of one dimension.
+    Anything that allows it to reference its elements as RPY[0],
+    RPY[1], and RPY[2]
     '''
-    #print("This is a week 1 function")
     if degrees:
         #i_ = internal
         i_yaw = m.radians(RPY[2])
@@ -25,17 +84,15 @@ def createRot (RPY, degrees=False):
     R_roll = np.array([[m.cos(i_roll), m.sin(i_roll), 0.],[-m.sin(i_roll), m.cos(i_roll), 0.],[0., 0., 1.]])
     return np.dot(R_roll, np.dot(R_pitch, R_yaw))
 
-def createSkewSymmMat (angles):
-    return np.array([[0., angles[2], -angles[1]],[-angles[2], 0., angles[0]], [angles[1], -angles[0], 0.]])
-
-
 def lineNormalToPoints(n, im_size):
     '''This returns either a tuple or list with two points inside of it.  These
     points should be on the edge of the image and correspond with the normal (n)
     passed in as the first parameter.  i.e. n^T x = 0 where x are the points 
     returned by this function.  The returned points should be 1-d numpy arrays with 
-    2 elements'''
-
+    2 elements.  im_size is assumed to be (width, height)
+    '''
+    
+    assert_np_matrix_choice(n, [(3,1), (1,3), (3,) ])
     print("This is a week 3 function")
 
 def createP (K, c_R_w, w_t_cam):
@@ -43,12 +100,19 @@ def createP (K, c_R_w, w_t_cam):
     the world to camera rotation matrix c_R_w, and the location of the camera in the 
     world coordinate system
     '''
+    assert_np_matrix(K, (3,3))
+    assert_np_matrix(c_R_w, (3,3))
+    assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)])
+    
     print("This is a week 3 function")
 
 def projectPoints(P,X):
     '''X is a 3xN or 4xN array with N points in it.  P is the projection matrix.
     Note that this function assumes the 4th element of X (if it is 4xN) are all
     1's.  If not, I don't check and who knows what happens... '''
+    assert_np_matrix(P, (3,4))
+    #Class discussion, do we care about the 4x cases?
+    assert_np_matrix_choice(X, [(3,0), (3,), (4,0), (4,) ])
     print("This is a week 3 function")
 
 def fundamentalMatrixFromGeometry(K, c1_R_w, w_t_cam1, c2_R_w, w_t_cam2):
@@ -59,7 +123,12 @@ def fundamentalMatrixFromGeometry(K, c1_R_w, w_t_cam1, c2_R_w, w_t_cam2):
     of the two cameras are with respect to a "world" frame as denoted by the
     parameter notations
     '''
-    print("This is a week 3 function")
+    assert_np_matrix(K, (3,3))
+    assert_np_matrix(c1_R_w, (3,3))
+    assert_np_matrix(c2_R_w, (3,3))
+    assert_np_matrix_choice(w_t_cam1, [(3,1), (1,3), (3,) ])
+    assert_np_matrix_choice(w_t_cam2, [(3,1), (1,3), (3,) ])
+
 
 def backprojectPoints(K, c_R_w, w_t_cam, x_dist_tuples):
     '''  
@@ -68,7 +137,14 @@ def backprojectPoints(K, c_R_w, w_t_cam, x_dist_tuples):
     will return a numpy array of world (3-D) points size 3xN, where N is the 
     length of the input list
     '''
-    print("This is a week 3 function")
+    assert_np_matrix(K, (3,3) )
+    assert_np_matrix(c_R_w, (3,3) )
+    assert_np_matrix_choice(w_t_cam, [ (3,1), (1,3), (3,) ])
+    for tup in x_dist_tuples:
+        assert_np_matrix_choice(tup[0], [(2,), (2,1), (1,2)])
+        if not type(tup[1]) is float:
+            raise ValueError('Wrong type', 'distance in x_dist_tuples must be floats')
+
         
 def rotateCameraAtPoint( w_point, w_camera, random_roll=False ):
     '''
@@ -80,11 +156,11 @@ def rotateCameraAtPoint( w_point, w_camera, random_roll=False ):
     Math-wise, the center image vector ([0,0,1]) gets rotated with yaw (y) and 
     pitch(y) to become:
     [sin(y)cos(p), -sin(p), cos(y)cos(p)]
-    HINT: Use atan2 as opposed to atan
     '''
-    print("This is a week 4 function")
+    assert_np_matrix_choice(w_point, [(3,1), (1,3), (3,) ])
+    assert_np_matrix_choice(w_camera, [(3,1), (1,3), (3,) ])
 
-def backupCamera( w_points, c_R_w, w_camera, K, im_size, pixel_buffer=None ):
+def backupCamera( w_points, c_R_w, w_camera, K, im_size, pixel_buffer=None ) -> np.ndarray((3,)):
     '''
     This function takes in an array of points in the world coordinate system 
     (w_points, 3xN) and "backs up" the camera location, where the camera is oriented 
@@ -94,9 +170,12 @@ def backupCamera( w_points, c_R_w, w_camera, K, im_size, pixel_buffer=None ):
     If pixel_buffer is passed in, it will back up the camera further so that no
     pixel is within pixel_buffer pixels of the edge of the image
     '''
-    print("This is a week 4 function")
+    assert_np_matrix(w_points, (3,0) )
+    assert_np_matrix(c_R_w, (3,3) )
+    assert_np_matrix_choice(w_camera, [(3,1), (1,3), (3,) ])
+    assert_np_matrix(K, (3,3))
 
-def imPointDerivX(P, X, row=None):
+def imPointDerivX(P, X, row=None) -> np.ndarray:
     '''
     This takes the derivative of u or v (row = 0 or 1) w.r.t. X in the formula P * X.
     It is a bit more tricky because it is a divide.  Using mixed LaTeX and Python notation,
@@ -110,9 +189,11 @@ def imPointDerivX(P, X, row=None):
 
     If row is None (the default), than a 2x3 matrix is returned as both rows will be returned.
     '''
-    print("This is a Week 4 function")
+    assert_np_matrix(P, (3,4))
+    assert_np_matrix_choice(X, [(3,1), (1,3), (3,) ])
+    #output is either a 1x3 or 2x3 array, depending on row
 
-def refineTriangulate(Px_list):
+def refineTriangulate(Px_list) -> np.ndarray( (3,) ):
     '''  
     This function will take a list of projection matrices and their
     corresponding pixel locations and find the best estimate of the point that
@@ -126,9 +207,13 @@ def refineTriangulate(Px_list):
     list must have at least 2 entries
 
     '''
+    for PX in Px_list:
+        P,X = PX
+        assert_np_matrix(P, (3,4))
+        assert_np_matrix_choice(X, [(3,1), (1,3), (3,) ])
+
     print("This is a Week 4 function")
 
     num_pts = len(Px_list)
     assert num_pts > 1, "Need at least 2 projection matrices and x values to triangulate"
 
-    
