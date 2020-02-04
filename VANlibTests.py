@@ -170,21 +170,22 @@ class TestVANlib(unittest.TestCase):
         #Might be nice to do a more complex test (rotation / translation), but 
         # this is at least a start
         #TODO:  More complex test here?
+        #Note, the TODO is for me, the instructor.  Not you (the student)
     
-    def test_pointCameraAtPoint(self):
+    def test_rotateCameraAtPoint(self):
         N = 20 #number of times to test it...
 
         for i in range(N):
             #create two random points, one for the camera, one for the point
             w_cam = np.random.rand(3)*200-100
             w_pt = np.random.rand(3)*200-100
-            R = van.pointCameraAtPoint( w_pt, w_cam, True )
+            R = van.rotateCameraAtPoint( w_pt, w_cam, True )
             tst = van.projectPoints( van.createP(self.K, R, w_cam), w_pt ).reshape((2))
             #Point should be at cx, cy in K matrix
             self.assertTrue( np.allclose( tst, self.K[:2,2] ) )
         
     
-   def test_imPointDerivX(self):
+    def test_imPointDerivX(self):
         #This will be numerical test
         #Create a random world location and some random points in space
         #Move the points by a small amount (numerical derivative)
@@ -217,6 +218,7 @@ class TestVANlib(unittest.TestCase):
                 numer_deriv[:,j] = (curr_im_pt - im_x)/ss
             #Compare the numerical and closed form derivative
             self.assertTrue(np.allclose(comput_deriv, numer_deriv, rtol=ss*.1))
+        
         #I should really do a test to make sure that if row == 0 or row==1 it doesn't croak
         comput_deriv = van.imPointDerivX(P,X)
         comput_deriv0 = van.imPointDerivX(P,X,0).reshape((1,3))
@@ -249,7 +251,7 @@ class TestVANlib(unittest.TestCase):
         X_ret = van.refineTriangulate(PX_list)
         #I choose the atol to correspond with the convergence criteria 
         # in refineTriangulate
-        self.assertTrue(np.allclose( X_ret, X_true) )
+        self.assertTrue(np.allclose( X_ret, X_true, atol=1E-5))
 
 unittest.main()
 
