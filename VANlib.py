@@ -115,7 +115,7 @@ def inImage( pt, im_size, buffer=None, my_eps = 1E-10 ):
         buffer -= my_eps
     going_out = pt[0] >=buffer and (pt[0] <= (im_size[0]-buffer)) and pt[1] >= buffer and pt[1] <= (im_size[1]-buffer)
 
-    assert type(going_out) is bool
+    assert type(going_out) is bool or type(going_out) is np.bool_
     return going_out
 
 def createP (K, c_R_w, w_t_cam):
@@ -125,8 +125,9 @@ def createP (K, c_R_w, w_t_cam):
     '''
     assert_np_matrix(K, (3,3))
     assert_np_matrix(c_R_w, (3,3))
-    assert_np_matrix(w_t_cam, (3,) )
-    
+    assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)] )
+    if len(w_t_cam.shape)==2:
+        w_t_cam = w_t_cam((3,))
     #Your code goes here...
 
     assert_np_matrix(going_out, (3,4) )
@@ -158,7 +159,7 @@ def backprojectPoints(K, c_R_w, w_t_cam, x_dist_tuples):
     assert_np_matrix(w_t_cam, (3,))
     for tup in x_dist_tuples:
         assert_np_matrix(tup[0], (2,))
-        if not type(tup[1]) is float:
+        if not type(tup[1]) is float and not type(tup[1]) is np.float64:
             raise ValueError('Wrong type', 'distance in x_dist_tuples must be floats')
 
     #Your code goes here...
