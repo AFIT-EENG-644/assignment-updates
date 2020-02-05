@@ -127,7 +127,7 @@ def createP (K, c_R_w, w_t_cam):
     assert_np_matrix(c_R_w, (3,3))
     assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)] )
     if len(w_t_cam.shape)==2:
-        w_t_cam = w_t_cam((3,))
+        w_t_cam = w_t_cam((3,))  # You can choose whichever type you want by writing a different if statement
     #Your code goes here...
 
     assert_np_matrix(going_out, (3,4) )
