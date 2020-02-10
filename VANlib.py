@@ -127,7 +127,7 @@ def createP (K, c_R_w, w_t_cam):
     assert_np_matrix(c_R_w, (3,3))
     assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)] )
     if len(w_t_cam.shape)==2:
-        w_t_cam = w_t_cam((3,))  # You can choose whichever type you want by writing a different if statement
+        w_t_cam = w_t_cam.reshape((3,))  # You can choose whichever type you want by writing a different if statement
     #Your code goes here...
 
     assert_np_matrix(going_out, (3,4) )
@@ -156,7 +156,9 @@ def backprojectPoints(K, c_R_w, w_t_cam, x_dist_tuples):
     '''
     assert_np_matrix(K, (3,3) )
     assert_np_matrix(c_R_w, (3,3) )
-    assert_np_matrix(w_t_cam, (3,))
+    assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)] )
+    if len(w_t_cam.shape)==2:
+        w_t_cam = w_t_cam.reshape((3,))  # You can choose whichever type you want by writing a different if statement
     for tup in x_dist_tuples:
         assert_np_matrix(tup[0], (2,))
         if not type(tup[1]) is float and not type(tup[1]) is np.float64:
@@ -178,8 +180,12 @@ def fundamentalMatrixFromGeometry(K, c1_R_w, w_t_cam1, c2_R_w, w_t_cam2):
     assert_np_matrix(K, (3,3))
     assert_np_matrix(c1_R_w, (3,3))
     assert_np_matrix(c2_R_w, (3,3))
-    assert_np_matrix(w_t_cam1, (3,) )
-    assert_np_matrix(w_t_cam2, (3,) )
+    assert_np_matrix_choice(w_t_cam, [(3,), (3,1), (1,3)] )
+    if len(w_t_cam1.shape)==2:
+        w_t_cam1 = w_t_cam1.reshape((3,))  # You can choose whichever type you want by writing a different if statement
+    assert_np_matrix_choice(w_t_cam2, [(3,), (3,1), (1,3)] )
+    if len(w_t_cam2.shape)==2:
+        w_t_cam2 = w_t_cam.reshape((3,))  # You can choose whichever type you want by writing a different if statement
     #Your code goes here...
     
     assert_np_matrix(going_out, (3,3))
@@ -234,7 +240,10 @@ def backupCamera( w_points, c_R_w, w_camera, K, im_size, pixel_buffer=None ) -> 
     '''
     assert_np_matrix(w_points, (3,0) )
     assert_np_matrix(c_R_w, (3,3) )
-    assert_np_matrix(w_camera, (3,))
+    assert_np_matrix_choice(w_camera, [(3,), (3,1), (1,3)] )
+    if len(w_camera.shape)==2:
+        w_camera = w_camera.reshape((3,))  # You can choose whichever type you want by writing a different if statement
+
     assert_np_matrix(K, (3,3))
     assert len(im_size)==2
 
@@ -258,7 +267,9 @@ def imPointDerivX(P, X, row=None) -> np.ndarray:
     If row is None (the default), than a 2x3 matrix is returned as both rows will be returned.
     '''
     assert_np_matrix(P, (3,4))
-    assert_np_matrix(X, (3,))
+    assert_np_matrix_choice(X, [(3,), (3,1), (1,3)] )
+    if len(X.shape)==2:
+        X = X.reshape((3,))  # You can choose whichever type you want by writing a different if statement
     
     
     #output is either a 1x3 or 2x3 array, depending on row

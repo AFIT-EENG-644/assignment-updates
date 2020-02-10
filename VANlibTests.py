@@ -76,13 +76,13 @@ class TestVANlib(unittest.TestCase):
         self.assertTrue(np.allclose(should_be1, x1))
         
         #Shift the camera right 1 meter
-        t2 = np.array([1., 0., 0.]).reshape((3,1))
+        t2 = np.array([1., 0., 0.]).reshape((3,))
         x2 = van.projectPoints( van.createP( K_test, R1, t2), X_test )
         should_be2 = 500. + np.array([[-100., 0, -100., -100., -50.],[0., 0., 0., 100., -50.]])
         self.assertTrue(np.allclose(should_be2, x2))
 
         #Shift the camera down 1 meter
-        t3 = np.array([0., 1., 0.]).reshape((3,1))
+        t3 = np.array([0., 1., 0.]).reshape((3,))
         x3 = van.projectPoints( van.createP( K_test, R1, t3), X_test )
         should_be3 = 500. + np.array([[0., 100., -50., 0., 0.],[-100., -100., -50., 0., -100.]])
         self.assertTrue(np.allclose(should_be3, x3))
