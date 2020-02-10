@@ -70,7 +70,7 @@ class TestVANlib(unittest.TestCase):
         X_test = np.array([[0., 1., -1., 0., 0.],[0., 0., 0., 1., -1.], [10., 10., 20., 10., 20.]])
         K_test = np.array([[1000., 0., 500.],[0., 1000., 500.], [0., 0., 1.]])
         R1 = np.eye(3)
-        t1 = np.zeros((3,1))
+        t1 = np.zeros((3,))
         x1 = van.projectPoints( van.createP( K_test, R1, t1), X_test )
         should_be1 = 500. + np.array([[0., 100., -50., 0., 0.],[0., 0., 0., 100., -50.]])
         self.assertTrue(np.allclose(should_be1, x1))
