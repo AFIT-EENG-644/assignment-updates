@@ -152,7 +152,7 @@ class TestVANlib(unittest.TestCase):
         bu_loc = van.backupCamera(pts, R, new_loc, self.K, im_size)
         self.assertTrue( bu_loc[0] == 0.)
         self.assertTrue( bu_loc[1] == 0.)
-        self.assertTrue( bu_loc[2] >= 0.)
+        self.assertTrue( bu_loc[2] >= 0.) #if you do a random or otherwise "sub-optimal backup step", this test can be modified
         #Now test the projections...
         P = van.createP(self.K, R, bu_loc)
         im_pts = van.projectPoints(P,pts)
@@ -167,10 +167,24 @@ class TestVANlib(unittest.TestCase):
         for i in range(im_pts.shape[1]):
             self.assertTrue( van.inImage(im_pts[:,i], im_size, 10 ) )
         
-        #Might be nice to do a more complex test (rotation / translation), but 
-        # this is at least a start
-        #TODO:  More complex test here?
-        #Note, the TODO is for me, the instructor.  Not you (the student)
+        #Try to do a more complex test
+        #Create some points
+        N_tests = 20
+        for ii in range(N_tests):
+            N_pts = 20
+            pts = np.random.rand(3,N_pts)*100-50
+            cam_loc = np.random.rand(3)*100-50
+            random_rot = np.random.rand(3)*2*m.pi
+            c_R_w = van.createRot(random_rot)
+            t_cam = van.backupCamera(pts, c_R_w, cam_loc, self.K, im_size, 3)
+            #Now test the projections...
+            P = van.createP(self.K, c_R_w, t_cam)
+            im_pts = van.projectPoints(P,pts)
+            for i in range(N_pts):
+                self.assertTrue( van.inImage(im_pts[:,i], im_size, 3 ) )
+            for i in range(N_pts):
+                z_val = (np.dot(P,np.array([pts[0,i],pts[1,i],pts[2,i],1.]) ) )[2]
+                self.assertTrue(z_val >= 0) #Make sure z is positive
     
     def test_rotateCameraAtPoint(self):
         N = 20 #number of times to test it...
